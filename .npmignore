@@ -1,0 +1,7 @@
+src/
+tsconfig.json
+eslint.config.mjs
+.gitignore
+sandbox.ts
+.test-data/
+*.tsbuildinfo
