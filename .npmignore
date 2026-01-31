@@ -1,7 +1,12 @@
 src/
-tsconfig.json
+test/
+tsconfig*.json
+jest.config.js
 eslint.config.mjs
-.gitignore
 sandbox.ts
+.gitignore
+.github/
+.vscode/
 .test-data/
 *.tsbuildinfo
+*.js.map
