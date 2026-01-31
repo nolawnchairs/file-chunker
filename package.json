@@ -18,8 +18,9 @@
     "typescript-eslint": "^8.54.0"
   },
   "scripts": {
-    "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rm -rf ./dist && tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "lint": "eslint \"src/**/*.ts\" --fix"
   }
 }
