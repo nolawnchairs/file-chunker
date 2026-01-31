@@ -5,6 +5,13 @@ export class InvalidChunkError extends Error {
   }
 }
 
+export class MissingChunkError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'MissingChunkError'
+  }
+}
+
 export class InvalidChecksumError extends Error {
   constructor(message: string) {
     super(message)
