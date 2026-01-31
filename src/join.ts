@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto'
-import { InvalidChecksumError, InvalidFinalChecksumError } from './errors'
+import { InvalidChecksumError, InvalidFinalChecksumError, MissingChunkError } from './errors'
 
 export type FileChunk = {
-  buffer: Buffer
+  getBuffer: () => Promise<Buffer | null>
   index: number
   checksum: string
 }
@@ -37,20 +37,19 @@ export class FileJoiner {
     // Sort chunks by index to ensure correct order
     const sortedChunks = [...this.config.chunks].sort((a, b) => a.index - b.index)
 
-    // Validate we have all expected indices
-    for (let i = 0; i < sortedChunks.length; i++) {
-      if (sortedChunks[i].index !== i) {
-        throw new Error(`Missing chunk at index ${i}`)
-      }
-    }
-
     const fileHash = createHash('sha256')
     const sourceChunksInfo: Array<{ index: number; checksum: string }> = []
 
     // Validate each chunk's checksum and build the file
     for (const sourceChunk of sortedChunks) {
+      // Load buffer lazily
+      const buffer = await sourceChunk.getBuffer()
+      if (buffer === null) {
+        throw new MissingChunkError(`Chunk at index ${sourceChunk.index} is missing`)
+      }
+
       // Validate chunk checksum
-      const calculatedChecksum = createHash('sha256').update(sourceChunk.buffer).digest('hex')
+      const calculatedChecksum = createHash('sha256').update(buffer).digest('hex')
       if (calculatedChecksum !== sourceChunk.checksum) {
         throw new InvalidChecksumError(
           `Chunk at index ${sourceChunk.index} has invalid checksum. Expected: ${sourceChunk.checksum}, Got: ${calculatedChecksum}`
@@ -58,7 +57,7 @@ export class FileJoiner {
       }
 
       // Update file hash
-      fileHash.update(sourceChunk.buffer)
+      fileHash.update(buffer)
 
       // Track source chunk info
       sourceChunksInfo.push({
@@ -69,7 +68,7 @@ export class FileJoiner {
       // Yield the chunk immediately for flushing
       yield {
         done: false,
-        output: sourceChunk.buffer,
+        output: buffer,
         checksum: sourceChunk.checksum,
       }
     }
